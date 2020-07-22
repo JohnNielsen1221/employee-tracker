@@ -27,14 +27,3 @@ CREATE TABLE employee (
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE,
     FOREIGN KEY (manager_id) REFERENCES employee(id) ON DELETE CASCADE
 );
-
-/* UPDATE
-    product p
-LEFT JOIN 
-    product tp
-ON 
-    p.id = tp.id
-SET
-    p.price = 30
-WHERE 
-    p.points = 2 */
