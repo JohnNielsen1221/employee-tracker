@@ -7,11 +7,14 @@
     "console.table": "^0.10.0",
     "express": "^4.17.1",
     "inquirer": "^7.3.2",
-    "mysql2": "^2.1.0"
+    "migrate": "^1.7.0",
+    "mysql2": "^2.1.0",
+    "seed": "^0.4.4"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+
   },
   "repository": {
     "type": "git",

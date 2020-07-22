@@ -3,9 +3,11 @@ const inquirer = require("inquirer");
 const consoleTable = require("console.table");
 const mysql = require("mysql2");
 
-// ====================================================================================================================
-// Start Inquirer Pormpts
+// Start Inquirer Prompts
 const askQuestions = function() {
+    console.log("****************************************************************");
+    console.log("*----------------------------WELCOME---------------------------*");
+    console.log("****************************************************************");
   inquirer
     .prompt({
       type: "list",
@@ -19,7 +21,6 @@ const askQuestions = function() {
         "add department",
         "add role",
         "update employee role",
-        "remove employee"
       ]
     })
     .then(function(answer) {
@@ -43,6 +44,10 @@ const askQuestions = function() {
 
         case "update employee role":
           updateEmployeeRole();
+          break;
+
+        case "update employee manager":
+          updateEmployeeManager();
           break;
 
         case "add department":
@@ -74,11 +79,15 @@ function viewallroles() {
 }
 
 function viewallemployees() {
-  console.log("retrieving employess from database");
-  var fancyQuery =
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;";
-  connection.query(fancyQuery, function(err, answer) {
+  console.log("retrieving employees from database");
+  var employeeQuery =
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name " + 
+    "AS department, CONCAT(manager.first_name,' ', manager.last_name) AS manager, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id;";
+  connection.query(employeeQuery, function(err, answer) {
     console.log("\n Employees retrieved from Database \n");
+    if (err) {
+      console.log(err)
+    };
     console.table(answer);
   });
   askQuestions();
@@ -119,15 +128,15 @@ function addEmployee() {
 }
 
 function updateEmployeeRole() {
-  let allemp = [];
+  let allEmployees = [];
   connection.query("SELECT * FROM employee", function(err, answer) {
     // console.log(answer);
     for (let i = 0; i < answer.length; i++) {
       let employeeString =
         answer[i].id + " " + answer[i].first_name + " " + answer[i].last_name;
-      allemp.push(employeeString);
+      allEmployees.push(employeeString);
     }
-    // console.log(allemp)
+    // console.log(allEmployees)
 
     inquirer
       .prompt([
@@ -135,7 +144,7 @@ function updateEmployeeRole() {
           type: "list",
           name: "updateEmployeeRole",
           message: "select employee to update role",
-          choices: allemp
+          choices: allEmployees
         },
         {
           type: "list",
@@ -148,6 +157,51 @@ function updateEmployeeRole() {
         console.log("about to update", answer);
         const idToUpdate = {};
         idToUpdate.employeeId = parseInt(answer.updateEmployeeRole.split(" ")[0]);
+        if (answer.newrole === "manager") {
+          idToUpdate.role_id = 1;
+        } else if (answer.newrole === "employee") {
+          idToUpdate.role_id = 2;
+        }
+        connection.query(
+          "UPDATE employee SET role_id = ? WHERE id = ?",
+          [idToUpdate.role_id, idToUpdate.employeeId],
+          function(err, data) {
+            askQuestions();
+          }
+        );
+      });
+  });
+}
+function updateEmployeeManager() {
+  let allEmployees = [];
+  connection.query("SELECT * FROM employee", function(err, answer) {
+    // console.log(answer);
+    for (let i = 0; i < answer.length; i++) {
+      let employeeString =
+        answer[i].id + " " + answer[i].first_name + " " + answer[i].last_name;
+      allEmployees.push(employeeString);
+    }
+    // console.log(allEmployees)
+
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "updateEmployeeManager",
+          message: "select employee to update their manager",
+          choices: allEmployees
+        },
+        {
+          type: "list",
+          message: "select new manager",
+          choices: allEmployees,
+          name: "newmanager"
+        }
+      ])
+      .then(function(answer) {
+        console.log("about to update", answer);
+        const idToUpdate = {};
+        idToUpdate.employeeId = parseInt(answer.updateEmployeeManager.split(" ")[0]);
         if (answer.newrole === "manager") {
           idToUpdate.role_id = 1;
         } else if (answer.newrole === "employee") {
